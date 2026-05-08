@@ -1,0 +1,10 @@
+data/
+*.duckdb
+*.XPT
+.env
+.Rhistory
+.RData
+.Rproj.user/
+renv/library/
+renv/staging/
+.positai
