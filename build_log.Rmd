@@ -44,4 +44,6 @@ The minimal end-to-end pipeline. Demographics, blood pressure, cholesterol in si
 The `.env` file is created as an empty template now, as it will contain API keys, it should never be pushed to the repo, so that is taken care of in `.gitignore`.
 
 
--To be continued-
+### Downloading
+
+After a few hiccups trying to download the files (the other option was to use nhanesA but I decided to use the download via link method, because it is overall a more versatile method), getting the wrong URL and downloading the error page HTML instead of the required xpt file, I finally managed to get it going using `download.files()`. Finally, a `walk()` command is used to check the file sizes, which matched what was seen on the website.
