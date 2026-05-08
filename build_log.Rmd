@@ -1,0 +1,47 @@
+---
+title: "NHANES-MetRisk Build Log"
+author: "Debasrija"
+date: "2026-05-08"
+output: html_document
+---
+
+# nhanes-metrisk Build Journal
+
+A running account of how this project was built and why. 
+
+
+## Why This Project Exists
+
+The goal was to build a portfolio project for a health data analyst role, while also catering to my growing interest in LLMs and AI in general. Initially, my idea was a health data analytics pipeline with an AI layer for summarising statistics. However, from the experience of an MVP I made earlier, I realised that it is necessary to evaluate outputs properly. So I am looking to include more formal methods of evaluation instead of reactively fixing bugs while manually testing the application.    
+
+
+## Technical Decisions
+
+**DuckDB: **
+The natural question is why bother with a database at all when the data fits comfortably in memory. First, the planned AI layer needs a SQL backend: R functions executing DuckDB queries and returning aggregated results, which requires a queryable store. Second, it becomes a pipeline with it, over just being a simple notebook or script. DuckDB has extensive documentation that makes it easy to use.
+
+**OMOP CDM: **
+OMOP is the standard that makes health data interoperable. This becomes a good opportunity for me to see how this schema plays out with a dataset.
+
+**Gemma 4: **
+Free tier on Google's Gemini API gives 1,500 requests/day with unlimited tokens for Gemma 4. So no cost ceiling while testing. 
+
+**No NL to SQL: **
+NL-to-SQL exposes the data to the LLM, and an injection style prompt could return individual-level patient rows to the model. The plan is to let R functions execute DuckDB aggregation queries and return JSON summaries. Nonetheless, there will be guardrails that will further prevent these prompts from returning anything.
+
+
+## Iteration 1 · OMOP Heartbeat
+
+
+The minimal end-to-end pipeline. Demographics, blood pressure, cholesterol in six files, and four LOINC codes. I would like to have every layer of this system working first: download, then OMOP mapping, DuckDB, analysis and Quarto report. 
+
+### Project Setup - mostly notes for self
+
+`.gitignore` has to be created before the first commit, not after. If a file is committed before it appears in `.gitignore`, git tracks it permanently. For a project involving API keys and patient-adjacent data, privacy is of prime concern.
+
+`renv` is initialised before any packages are installed. The reason: `renv::init()` sets up a project-local package library and `renv::snapshot()` locks the versions. The "Explicit" snapshot mode locks only packages that are explicitly installed.
+
+The `.env` file is created as an empty template now, as it will contain API keys, it should never be pushed to the repo, so that is taken care of in `.gitignore`.
+
+
+-To be continued-
