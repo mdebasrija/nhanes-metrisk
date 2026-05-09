@@ -30,10 +30,10 @@ Free tier on Google's Gemini API gives 1,500 requests/day with unlimited tokens 
 NL-to-SQL exposes the data to the LLM, and an injection style prompt could return individual-level patient rows to the model. The plan is to let R functions execute DuckDB aggregation queries and return JSON summaries. Nonetheless, there will be guardrails that will further prevent these prompts from returning anything.
 
 
-## Iteration 1 · OMOP Heartbeat
+## Iteration 1 - OMOP Conversion
 
 
-The minimal end-to-end pipeline. Demographics, blood pressure, cholesterol in six files, and four LOINC codes. I would like to have every layer of this system working first: download, then OMOP mapping, DuckDB, analysis and Quarto report. 
+The minimal end-to-end pipeline that converts NHANES to OMOP CDM. Demographics, blood pressure, cholesterol in six files, and four LOINC codes. I would like to have every layer of this system working first: download, then OMOP mapping, DuckDB, analysis and Quarto report. 
 
 ### Project Setup - mostly notes for self
 
@@ -44,6 +44,15 @@ The minimal end-to-end pipeline. Demographics, blood pressure, cholesterol in si
 The `.env` file is created as an empty template now, as it will contain API keys, it should never be pushed to the repo, so that is taken care of in `.gitignore`.
 
 
-### Downloading
+### Downloading with `01_download.R`
 
 After a few hiccups trying to download the files (the other option was to use nhanesA but I decided to use the download via link method, because it is overall a more versatile method), getting the wrong URL and downloading the error page HTML instead of the required xpt file, I finally managed to get it going using `download.files()`. Finally, a `walk()` command is used to check the file sizes, which matched what was seen on the website.
+
+
+### Making the person table with `02_map_persona.R`
+
+There are 15560 rows in the DEMO dataset, out of which 9693 are adults. Out of them, 728 adults (7.5%) are RIDSTATR=1 (interview only), so they have no BP or lab measurements available. They will appear as NAs in analysis dataset.
+
+For what I would need for the subsequent operations, only a subset of the 29 columns are required. The columns I kept are SEQN (as an identifier), RIAGENDR (to convert to gender OMOP style), RIDAGEYR (age in years, and to calculate the approximate year of birth - more on this later), RIDRETH3 (race, converted to OMOP later with the race concept ID, race label and ethnicity), RIDSTATR (as discussed above), and WTMECPRP (survey weights). The year of birth is approximated as 2018 − RIDAGEYR, 2018 being the midpoint of the collection window and most samples in this set coming from the 2017-18 set as the next one was prematurely cut off by COVID. 
+
+Additionally, Hispanic participants (RIDRETH3 1 and 2) were assigned ethnicity concept ID 38003563; race_concept_id also set to 38003563 as no dedicated race concept exists for Hispanic origin in OMOP. race_concept_id=0 was assigned to RIDRETH3=7 (Other/Multiracial) corresponding to the use of 0 in OMOP in the case of an unknown concept.
