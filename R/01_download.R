@@ -5,10 +5,14 @@ dir_create("data/raw") #although created earlier
 
 base <- "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/" 
 
+#2017 to 2020 full set in one
+
 files <- list(
-  c("2017/DataFiles/P_DEMO.xpt",  "data/raw/P_DEMO.xpt"), #2017-20 full set in one. 
-  c("2017/DataFiles/P_BPXO.xpt",   "data/raw/P_BPXO.xpt"),
-  c("2017/DataFiles/P_TCHOL.xpt", "data/raw/P_TCHOL.xpt")
+  c("2017/DataFiles/P_DEMO.xpt",  "data/raw/P_DEMO.xpt"),
+  c("2017/DataFiles/P_BPXO.xpt",  "data/raw/P_BPXO.xpt"),
+  c("2017/DataFiles/P_TCHOL.xpt", "data/raw/P_TCHOL.xpt"),
+  c("2017/DataFiles/P_HDL.xpt",   "data/raw/P_HDL.xpt"),
+  c("2017/DataFiles/P_TRIGLY.xpt","data/raw/P_TRIGLY.xpt")
 )
 
 walk(files, function(f) {
@@ -20,5 +24,4 @@ walk(files, function(f) {
   }
 })
 
-message("Done. Files:")
 walk(dir_ls("data/raw"), \(f) message(sprintf("  %-20s %s", basename(f), file_size(f)))) #check file size for sanity
