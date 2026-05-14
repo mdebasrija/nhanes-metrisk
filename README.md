@@ -49,14 +49,15 @@ R ≥ 4.5 (I used 4.5.3, and in RStudio) packages managed by renv
 ```
 R/01_download.R to download CDC files
 R/02_map_person.R for adding concept IDs in OMOP format for 9693 adults
-R/03_map_measurement.R  (in progress, mapping lab measurements to LOINC codes)
+R/03_map_measurement.R for mapping lab measurements to LOINC codes
+R/04_store_duckdb.R (in progress for writing the dataframes to duckDB such that they become SQL-queryable and faster in terms of operation)
 ```
 
-Ideally, I would map LOINC codes and concept IDs using the full vocabulary database and validate using Athena, but since this is on a smaller scale, I am choosing to do this manually while ensuring the codes are correct by manually looking them up in Athena. 
+Ideally, I would map LOINC codes and concept IDs using the full vocabulary database and validate using Athena, but since this is on a smaller scale, I am choosing to do this manually while ensuring the codes are correct by manually looking them up in Athena. All the logic behind this mapping is included in the build log. (`build_log.Rmd`)
 
 ## Limitations
 
-- Survey weights not applied, so estimates describe the sample
+- Survey weights not applied, so estimates describe the sample and not the general population
 - 728 adults (7.5%) are interview-only (RIDSTATR=1), so there are no physical measurements
 - `year_of_birth` is approximate (2018 - age)
 - BP oscillometric method and not comparable to pre-2017 auscultatory NHANES cycles
