@@ -1,0 +1,82 @@
+# nhanes-metrisk variable map
+# Documents every variable and its associated info
+
+# Person table
+
+SEQN:
+  target: person_id
+  type: integer
+  note: "Unique respondent sequence number. Primary key across all NHANES files."
+
+RIAGENDR:
+  target: gender_concept_id + sex_label
+  values:
+    1: Male (OMOP 8507)
+    2: Female (OMOP 8532)
+
+RIDAGEYR:
+  target: age_years + year_of_birth
+  note: "year_of_birth approximated as 2018 - RIDAGEYR. 2018 is midpoint of 2017-2020 collection window."
+  filter: "Adults only — RIDAGEYR >= 18"
+
+RIDRETH3:
+  target: race_concept_id + race_label + ethnicity_concept_id
+  values:
+    1: Hispanic — Mexican American (OMOP 38003563)
+    2: Hispanic — Other (OMOP 38003563)
+    3: Non-Hispanic White (OMOP 8527)
+    4: Non-Hispanic Black (OMOP 8516)
+    6: Non-Hispanic Asian (OMOP 8515)
+    7: Other/Multiracial (OMOP 0 — unknown)
+  note: "RIDRETH3 used over RIDRETH1 — 6-level version distinguishes Non-Hispanic Asian, relevant for ASCVD equation limitation."
+
+RIDSTATR:
+  target: ridstatr
+  values:
+    1: Interview only — no physical measurements
+    2: Interview and MEC examination
+  note: "728 adults (7.5%) are RIDSTATR=1. Retained in person table. Will appear as NAs after LEFT JOIN."
+
+WTMECPRP:
+  target: exam_weight
+  note: "MEC examination weight for combined P_ pre-pandemic file. Not applied — documented as limitation. RIDSTATR=1 participants have exam_weight=0."
+
+# Measurement Table
+
+BPXOSY1-3:
+  target: value_as_number (LOINC 96608-5)
+  method: "rowMeans(BPXOSY1, BPXOSY2, BPXOSY3, na.rm=TRUE)"
+  unit: mm[Hg]
+  note: "Oscillometric method (P_BPXO). Mean-specific LOINC used -  stored value is average of 3 readings. Arm not controlled for (BPAOARM) as it is a population-level analysis."
+
+BPXODI1-3:
+  target: value_as_number (LOINC 96609-3)
+  method: "rowMeans(BPXODI1, BPXODI2, BPXODI3, na.rm=TRUE)"
+  unit: mm[Hg]
+  note: "Same as SBP. NaN produced when all three readings are NA and filtered out."
+
+LBXTC:
+  loinc: "2093-3"
+  unit: mg/dL
+  source: P_TCHOL
+
+LBDHDD:
+  loinc: "2085-9"
+  unit: mg/dL
+  source: P_HDL
+
+LBXTR:
+  loinc: "3048-6"
+  unit: mg/dL
+  source: P_TRIGLY
+  note: "Fasting triglyceride. Row counts (~4,650) confirm TG present only in fasting subsample. Fasting-specific LOINC 3048-6 correct. Initially used 2571-8 (general) but a closer look at the documentation showed fasting-only data."
+
+LBDLDL:
+  loinc: "13457-7"
+  unit: mg/dL
+  source: P_TRIGLY
+  note: "Friedewald LDL. Martin-Hopkins (LBDLDLM) considered but also missing for TG >= 400 — no advantage at high end. Friedewald retained for literature comparability. Missing when TG >= 400 mg/dL."
+
+measurement_date:
+  value: "2018-06-01"
+  note: "Approximate. Individual exam dates suppressed in public release file for privacy. Midpoint of 2017-2020 collection window used. Do not use for temporal analysis."

@@ -33,7 +33,7 @@ NL-to-SQL exposes the data to the LLM, and an injection style prompt could retur
 ## Iteration 1 - OMOP Conversion
 
 
-The minimal end-to-end pipeline that converts NHANES to OMOP CDM. Demographics, blood pressure, cholesterol in six files, and four LOINC codes. I would like to have every layer of this system working first: download, then OMOP mapping, DuckDB, analysis and Quarto report. 
+The minimal end-to-end pipeline that converts NHANES to OMOP CDM. Demographics, blood pressure, cholesterol in five files, and six LOINC codes. I would like to have every layer of this system working first: download, then OMOP mapping, DuckDB, analysis and Quarto report. 
 
 ### Project Setup - mostly notes for self
 
@@ -46,7 +46,7 @@ The `.env` file is created as an empty template now, as it will contain API keys
 
 ### Downloading with `01_download.R`
 
-After a few hiccups trying to download the files (the other option was to use nhanesA but I decided to use the download via link method, because it is overall a more versatile method), getting the wrong URL and downloading the error page HTML instead of the required xpt file, I finally managed to get it going using `download.files()`. Finally, a `walk()` command is used to check the file sizes, which matched what was seen on the website.
+After a few hiccups trying to download the files (the other option was to use nhanesA but I decided to use the download via link method from https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles , because it is overall a more versatile method), getting the wrong URL and downloading the error page HTML instead of the required xpt file, I finally managed to get it going using `download.files()`. Finally, a `walk()` command is used to check the file sizes, which matched what was seen on the website.
 
 
 ### Making the person table with `02_map_persona.R`
@@ -56,3 +56,18 @@ There are 15560 rows in the DEMO dataset, out of which 9693 are adults. Out of t
 For what I would need for the subsequent operations, only a subset of the 29 columns are required. The columns I kept are SEQN (as an identifier), RIAGENDR (to convert to gender OMOP style), RIDAGEYR (age in years, and to calculate the approximate year of birth - more on this later), RIDRETH3 (race, converted to OMOP later with the race concept ID, race label and ethnicity), RIDSTATR (as discussed above), and WTMECPRP (survey weights). The year of birth is approximated as 2018 − RIDAGEYR, 2018 being the midpoint of the collection window and most samples in this set coming from the 2017-18 set as the next one was prematurely cut off by COVID. 
 
 Additionally, Hispanic participants (RIDRETH3 1 and 2) were assigned ethnicity concept ID 38003563; race_concept_id also set to 38003563 as no dedicated race concept exists for Hispanic origin in OMOP. race_concept_id=0 was assigned to RIDRETH3=7 (Other/Multiracial) corresponding to the use of 0 in OMOP in the case of an unknown concept.
+
+
+### Mapping each test to a standard LOINC code with `03_map_measurement.R`
+
+LOINC is the international standard for identifying lab tests, clinical measurements and documents. So each of the tests here have a specific LOINC code. The actual list of codes is massive, so I decided to manually map each test to its code. 
+
+For SBP and DBP, NHANES switched to oscillometric measurement from auscultatory 2017 onwards (which unfortunately makes it difficult to compare measurements before that). I went with the average of three measurements, so although the LOINC codes for the individual measurements are 8480-6 and 8462-4, the average is denoted by a different code which I used - 96608-5 for SBP and 96609-3 for DBP. I have not controlled for arm cuff size and arm used for measurement here, which is a deliberate simplification which should alter insights only minimally.
+
+Although lipids are provided in both mg/dL and mmol/L, I used only mg/dL, and hence the appropriate LOINC codes in tow.
+
+For triglycerides I considered the fasting-specific code 3048-6 since P_TRIGLY uses a fasting subsample weight. However, after re-checking the documentation I realised my first assumption about triglycerides being present for all participants was wrong and it was present only for the fasting subsample. Hence this consideration eventually was proved right.
+
+Three pre-calculated LDL methods are available: Friedewald, Martin-Hopkins, and NIH Equation 2. I was inclined to use Martin-Hopkins for its improved accuracy in high-TG patients, which is relevant for a metabolic syndrome cohort. However, NHANES sets Martin-Hopkins to missing for TG over 400 mg/dL, which removes that advantage altogether. The accuracy advantage of Martin-Hopkins is primarily at low LDL values (below 70 mg/dL), well below the derived flags used in this project (160 or more, 190 or more mg/dL). Finally, I retained Friedelwald as it is well established in literature. 
+
+This brings us to six final LOINC codes. The measurement_date is taken as 1st June 2018 as the approximate midpoint of the collection window to not keep it as NAs, as the real dates are suppressed to protect participant privacy. However, because of this, the date cannot be used as any useful information.

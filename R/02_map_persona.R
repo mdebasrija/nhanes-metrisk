@@ -1,3 +1,5 @@
+#mapping demographics (gender, age, race, ethnicity) to concept IDs
+
 library(haven)
 library(tidyverse)
 
