@@ -3,9 +3,9 @@
 library(haven)
 library(tidyverse)
 
-bpxo   <- read_xpt("data/raw/P_BPXO.xpt")
-tchol  <- read_xpt("data/raw/P_TCHOL.xpt")
-hdl    <- read_xpt("data/raw/P_HDL.xpt")
+bpxo <- read_xpt("data/raw/P_BPXO.xpt")
+tchol <- read_xpt("data/raw/P_TCHOL.xpt")
+hdl <- read_xpt("data/raw/P_HDL.xpt")
 trigly <- read_xpt("data/raw/P_TRIGLY.xpt")
 
 LOINC <- list(
@@ -36,8 +36,8 @@ bp_long <- bpxo |>
   )
 
 lipid_long <- list(
-  tchol  |> select(SEQN, LBXTC), #in mg/dL
-  hdl    |> select(SEQN, LBDHDD), #in mg/dL
+  tchol |> select(SEQN, LBXTC), #in mg/dL
+  hdl |> select(SEQN, LBDHDD), #in mg/dL
   trigly |> select(SEQN, LBXTR, LBDLDL) #in mg/dL, in mg/dL Friedelwald method
 ) |>
   reduce(full_join, by = "SEQN") |>
@@ -72,7 +72,7 @@ lipid_long <- list(
 measurement <- bind_rows(bp_long, lipid_long) |>
   filter(!is.na(value_as_number), !is.nan(value_as_number)) |>
   mutate(
-    measurement_id   = row_number(),
+    measurement_id = row_number(),
     measurement_date = as.Date("2018-06-01")
   ) |>
   select(measurement_id, person_id, measurement_concept_id,

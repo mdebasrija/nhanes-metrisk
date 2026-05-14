@@ -71,3 +71,7 @@ For triglycerides I considered the fasting-specific code 3048-6 since P_TRIGLY u
 Three pre-calculated LDL methods are available: Friedewald, Martin-Hopkins, and NIH Equation 2. I was inclined to use Martin-Hopkins for its improved accuracy in high-TG patients, which is relevant for a metabolic syndrome cohort. However, NHANES sets Martin-Hopkins to missing for TG over 400 mg/dL, which removes that advantage altogether. The accuracy advantage of Martin-Hopkins is primarily at low LDL values (below 70 mg/dL), well below the derived flags used in this project (160 or more, 190 or more mg/dL). Finally, I retained Friedelwald as it is well established in literature. 
 
 This brings us to six final LOINC codes. The measurement_date is taken as 1st June 2018 as the approximate midpoint of the collection window to not keep it as NAs, as the real dates are suppressed to protect participant privacy. However, because of this, the date cannot be used as any useful information.
+
+### Writing from dataframe to DuckDB with `04_store_duckdb.R`
+
+One issue with the measurement script was that it was not filtered to adults-only unlike the demographics file. So in this part, apart from writing the dataframes to duckDB format, that filtering was also done. I ran a few basic SQL queries (like row count, checking the number of duplicates - spoiler alert, there were none) and after verifying, closed the connection to let other R sessions use the DB as well.
